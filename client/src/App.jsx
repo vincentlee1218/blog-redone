@@ -1,6 +1,7 @@
 import { Routes, Route, Link } from 'react-router-dom'
 import Home from './pages/Home.jsx'
 import PostPage from './pages/PostPage.jsx'
+import WritePage from './pages/WritePage.jsx'
 
 export default function App() {
   return (
@@ -10,7 +11,7 @@ export default function App() {
           <Link to="/" className="brand">My Blog</Link>
           <nav className="nav">
             <Link to="/">Home</Link>
-            <span className="nav-btn">Get started</span>
+            <Link to="/write" className="nav-btn">Write</Link>
           </nav>
         </div>
       </header>
@@ -18,6 +19,7 @@ export default function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/posts/:id" element={<PostPage />} />
+          <Route path="/write" element={<WritePage />} />
         </Routes>
       </main>
     </>
