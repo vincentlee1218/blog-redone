@@ -14,8 +14,8 @@ export default function Home() {
       .finally(() => setLoading(false))
   }, [])
 
-  if (loading) return <p>Loading…</p>
-  if (error) return <p>Something went wrong: {error.message}</p>
+  if (loading) return <p className="status">Loading…</p>
+  if (error) return <p className="status">Something went wrong: {error.message}</p>
 
   return (
     <section>

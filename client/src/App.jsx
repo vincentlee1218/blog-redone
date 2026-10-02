@@ -6,7 +6,13 @@ export default function App() {
   return (
     <>
       <header className="site-header">
-        <Link to="/" className="brand">My Blog</Link>
+        <div className="header-inner">
+          <Link to="/" className="brand">My Blog</Link>
+          <nav className="nav">
+            <Link to="/">Home</Link>
+            <span className="nav-btn">Get started</span>
+          </nav>
+        </div>
       </header>
       <main className="container">
         <Routes>

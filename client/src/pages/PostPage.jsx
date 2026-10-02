@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { getPost } from '../lib/api.js'
+import Byline from '../components/Byline.jsx'
 
 export default function PostPage() {
   const { id } = useParams()
@@ -11,15 +12,18 @@ export default function PostPage() {
     getPost(id).then(setPost).catch(setError)
   }, [id])
 
-  if (error) return <p>Post not found. <Link to="/">Back</Link></p>
-  if (!post) return <p>Loading…</p>
+  if (error) return <p className="status">Post not found. <Link to="/">Back</Link></p>
+  if (!post) return <p className="status">Loading…</p>
 
   return (
-    <article>
-      <Link to="/">← Back</Link>
+    <article className="article">
       <h1>{post.title}</h1>
-      <p className="meta">{post.author} · {new Date(post.created_at).toLocaleDateString()}</p>
-      <p>{post.content}</p>
+      <p className="article-subtitle">{post.excerpt}</p>
+      <Byline post={post} />
+      <div className="article-body">
+        <p>{post.content}</p>
+      </div>
+      <Link to="/" className="back-link">← All stories</Link>
     </article>
   )
 }

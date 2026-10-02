@@ -4,7 +4,7 @@ module.exports = {
     {
       name: 'blog-server',
       script: 'src/index.js',
-      node_args: '--env-file=.env',
+      
       env: { NODE_ENV: 'production' },
     },
   ],
