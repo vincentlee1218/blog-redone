@@ -55,4 +55,8 @@ router.post('/', async (req, res) => {
   res.status(201).json(data)
 })
 
+// PATCH /api/posts/:id { title, author, content, excerpt }
+// Implement the database update here and return the updated post as JSON.
+router.patch('/:id', async (req, res) => {})
+
 export default router

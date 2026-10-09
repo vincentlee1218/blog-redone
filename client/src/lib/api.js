@@ -11,6 +11,13 @@ async function request(path, options) {
 
 export const getPosts = () => request('/api/posts')
 export const getPost = (id) => request(`/api/posts/${id}`)
+export const updatePost = (id, post) =>
+  request(`/api/posts/${id}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(post),
+    signal: AbortSignal.timeout(10000),
+  })
 export const createPost = (post) =>
   request('/api/posts', {
     method: 'POST',

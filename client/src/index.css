@@ -66,3 +66,15 @@ a { color: inherit; text-decoration: none; }
 .publish-btn { align-self: flex-start; background: var(--accent); color: #fff; border: none; padding: 10px 20px; border-radius: 999px; font-family: var(--sans); font-size: .875rem; cursor: pointer; }
 .publish-btn:disabled { opacity: .5; cursor: default; }
 .form-error { color: #c0392b; font-size: .875rem; margin: 0; }
+
+/* Post editing */
+.article-actions { display: flex; justify-content: flex-end; margin-bottom: 16px; }
+.edit-btn { display: inline-flex; align-items: center; gap: 8px; border: 1px solid #ddd; background: #fff; color: var(--muted); padding: 8px 14px; border-radius: 999px; font-family: var(--sans); font-size: .875rem; cursor: pointer; }
+.edit-btn:hover { color: var(--text); border-color: var(--muted); }
+.edit-btn:disabled { opacity: .5; cursor: default; }
+.edit-btn:focus-visible, .publish-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.edit-fields { display: flex; flex-direction: column; gap: 12px; border: 0; padding: 0; margin: 0; min-width: 0; }
+.edit-fields label { font-size: .875rem; color: var(--muted); }
+.edit-actions { display: flex; align-items: center; gap: 12px; }
+.save-status { color: var(--accent); font-size: .875rem; }
+.article-body p { white-space: pre-wrap; overflow-wrap: anywhere; }
