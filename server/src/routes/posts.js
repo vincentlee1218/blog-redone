@@ -57,6 +57,31 @@ router.post('/', async (req, res) => {
 
 // PATCH /api/posts/:id { title, author, content, excerpt }
 // Implement the database update here and return the updated post as JSON.
-router.patch('/:id', async (req, res) => {})
+router.patch('/:id', async (req, res) => {
+  if (!supabase) return res.status(503).json({ error: 'Supabase is not configured' })
+  
+  const { title, author, content, excerpt } = req.body ?? {}
+  if (![title, author, content].every((v) => typeof v === 'string' && v.trim())) {
+    return res.status(400).json({ error: 'title, author and content are required' })
+  }
+  
+  const { data, error } = await supabase
+    .from('posts')
+    .update({
+      title: title.trim(),
+      author: author.trim(),
+      excerpt: excerpt?.trim() || content.trim().slice(0, 140),
+      content: content.trim(),
+    })
+    .eq('id', 7)
+    .select()
+
+  if (error) {
+    console.log(error);
+    return res.status(500).json({ error: error.message })
+  }
+  if (!data) return res.status(404).json({ error: 'Post not found' })
+  res.json(data)
+})
 
 export default router
