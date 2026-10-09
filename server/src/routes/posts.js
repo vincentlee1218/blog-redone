@@ -73,7 +73,7 @@ router.patch('/:id', async (req, res) => {
       excerpt: excerpt?.trim() || content.trim().slice(0, 140),
       content: content.trim(),
     })
-    .eq('id', 7)
+    .eq('id', req.params.id)
     .select()
 
   if (error) {
