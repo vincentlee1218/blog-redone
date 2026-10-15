@@ -7,3 +7,11 @@ create table if not exists posts (
   content text not null,
   created_at timestamptz not null default now()
 );
+
+create table if not exists users (
+  id bigint generated always as identity primary key,
+  email text not null unique,
+  name text not null,
+  password_hash text not null,
+  created_at timestamptz not null default now()
+);

@@ -2,6 +2,7 @@ import 'dotenv/config'
 import express from 'express'
 import cors from 'cors'
 import postsRouter from './routes/posts.js'
+import authRouter from './routes/auth.js'
 import { checkDb } from './lib/supabase.js'
 
 const app = express()
@@ -18,6 +19,7 @@ app.get('/db', async (_req, res) => {
   res.status(status).json(body)
 })
 
+app.use('/api/auth', authRouter)
 app.use('/api/posts', postsRouter)
 
 app.listen(PORT, async () => {

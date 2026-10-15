@@ -1,5 +1,6 @@
 import { Router } from 'express'
 import { supabase } from '../lib/supabase.js'
+import { requireAuth } from '../middleware/auth.js'
 
 const router = Router()
 
@@ -32,7 +33,7 @@ router.get('/:id', async (req, res) => {
 })
 
 // POST /api/posts  { title, author, content, excerpt? }
-router.post('/', async (req, res) => {
+router.post('/', requireAuth, async (req, res) => {
   if (!supabase) return res.status(503).json({ error: 'Supabase is not configured' })
 
   const { title, author, content, excerpt } = req.body ?? {}
@@ -57,7 +58,7 @@ router.post('/', async (req, res) => {
 
 // PATCH /api/posts/:id { title, author, content, excerpt }
 // Implement the database update here and return the updated post as JSON.
-router.patch('/:id', async (req, res) => {
+router.patch('/:id', requireAuth, async (req, res) => {
   if (!supabase) return res.status(503).json({ error: 'Supabase is not configured' })
   
   const { title, author, content, excerpt } = req.body ?? {}
