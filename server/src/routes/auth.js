@@ -59,7 +59,24 @@ router.post('/register', async (req, res) => {
 //      message for both so emails can't be probed.
 //   5. On success, res.json({ token: signToken(data), user: publicUser(data) }).
 router.post('/login', async (req, res) => {
-  res.status(501).json({ error: 'Login not implemented yet' })
+  if (ready(res)) return
+  const { email, password } = req.body ?? {}
+  if (![email, password].every((v) => typeof v === 'string' && v.trim())) {
+    return res.status(400).json({ error: 'login email and password are required' })
+  }
+  
+  const { data, error } = await supabase
+    .from('users')
+    .select('*')
+    .eq('email', email.trim().toLowerCase())
+    .maybeSingle();
+  
+  if (error) { res.status(500).json({ error: error.message })}
+  if (!data || !(await bcrypt.compare(password, data.password_hash))) {
+    console.log("Attempted login: " + email + ":" + password);
+    res.status(401).json({ error: "Invalid login" })
+  }
+  res.status(200).json({ token: signToken(data), user: publicUser(data) })
 })
 
 // GET /api/auth/me (requires token)
