@@ -73,7 +73,6 @@ router.post('/login', async (req, res) => {
   
   if (error) { res.status(500).json({ error: error.message })}
   if (!data || !(await bcrypt.compare(password, data.password_hash))) {
-    console.log("Attempted login: " + email + ":" + password);
     res.status(401).json({ error: "Invalid login" })
   }
   res.status(200).json({ token: signToken(data), user: publicUser(data) })

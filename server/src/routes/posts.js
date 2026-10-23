@@ -76,6 +76,7 @@ router.patch('/:id', requireAuth, async (req, res) => {
     })
     .eq('id', req.params.id)
     .select()
+    .maybeSingle()
 
   if (error) {
     console.log(error);

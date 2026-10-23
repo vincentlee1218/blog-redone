@@ -38,6 +38,6 @@ const json = (body) => ({
 })
 // TODO: implement login. POST { email, password } to /api/auth/login using the
 // json() helper above. The response is { token, user }.
-export const login = async (creds) => {}
+export const login = async (creds) => request('/api/auth/login', json(creds))
 export const register = (data) => request('/api/auth/register', json(data))
 export const getMe = () => request('/api/auth/me')

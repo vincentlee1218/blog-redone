@@ -29,7 +29,7 @@ export function AuthProvider({ children }) {
     user,
     loading,
     // TODO: implement login. Reuse authenticate() with api.login, like register does.
-    login: async (creds) => {},
+    login: async (creds) => authenticate(api.login, creds),
     register: (data) => authenticate(api.register, data),
     logout: () => {
       clearToken()
