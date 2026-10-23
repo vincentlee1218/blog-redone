@@ -69,7 +69,7 @@ export default function PostPage() {
             <label htmlFor="edit-title">Title</label>
             <input id="edit-title" name="title" className="write-title" value={form.title} onChange={update} required autoFocus pattern=".*\S.*" />
             <label htmlFor="edit-author">Author</label>
-            <input id="edit-author" name="author" value={form.author} onChange={update} required pattern=".*\S.*" />
+            <input id="edit-author" name="author" disabled={true} style={{color: "#888"}} value={form.author} onChange={update} required pattern=".*\S.*" />
             <label htmlFor="edit-excerpt">Subtitle (optional)</label>
             <input id="edit-excerpt" name="excerpt" value={form.excerpt} onChange={update} />
             <label htmlFor="edit-content">Content</label>
