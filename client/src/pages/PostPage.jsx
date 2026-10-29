@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { getPost, updatePost } from '../lib/api.js'
 import Byline from '../components/Byline.jsx'
+import VoteButtons from '../components/VoteButtons.jsx'
 import { useAuth } from '../context/AuthContext.jsx'
 
 export default function PostPage() {
@@ -105,6 +106,7 @@ export default function PostPage() {
         <div className="article-body">
           <p>{post.content}</p>
         </div>
+        <VoteButtons key={post.id} post={post} />
           </>
       )}
       <Link to="/" className="back-link">← All stories</Link>

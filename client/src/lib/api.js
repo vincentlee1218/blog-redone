@@ -41,3 +41,6 @@ const json = (body) => ({
 export const login = async (creds) => request('/api/auth/login', json(creds))
 export const register = (data) => request('/api/auth/register', json(data))
 export const getMe = () => request('/api/auth/me')
+
+// value: 1 (upvote), -1 (downvote) or 0 (remove vote). Expects { upvotes, downvotes } back.
+export const votePost = (id, value) => request(`/api/posts/${id}/vote`, json({ value }))
