@@ -71,11 +71,23 @@ router.post('/login', async (req, res) => {
     .eq('email', email.trim().toLowerCase())
     .maybeSingle();
   
-  if (error) { res.status(500).json({ error: error.message })}
-  if (!data || !(await bcrypt.compare(password, data.password_hash))) {
-    res.status(401).json({ error: "Invalid login" })
+  if (error) {
+    // Check for no-connection failure
+    const { message: cause, details } = error;
+    console.log("Auth error: " + cause);
+    if (cause.includes('fetch failed') && details.includes('ENOTFOUND')) {
+      console.log("503: No database connection");
+      return res.status(503).json({ error: "An error occurred while logging in. Please try again later"})
+    }
+    console.log("500: " + error.message);
+    return res.status(500).json({ error: error.message })
   }
-  res.status(200).json({ token: signToken(data), user: publicUser(data) })
+  if (!data || !(await bcrypt.compare(password, data.password_hash))) {
+    console.log("401: Invalid login");
+    return res.status(401).json({ error: "Invalid login" })
+  }
+  console.log(`200: Successsful login with id ${publicUser(data).id}`)
+  return res.status(200).json({ token: signToken(data), user: publicUser(data) })
 })
 
 // GET /api/auth/me (requires token)

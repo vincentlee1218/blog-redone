@@ -5,7 +5,7 @@ import { useAuth } from '../context/AuthContext.jsx'
 
 export default function WritePage() {
   const navigate = useNavigate()
-  const { user } = useAuth();
+  const { user } = useAuth()
   const [form, setForm] = useState({ title: '', author: user.name, excerpt: '', content: '' })
   const [error, setError] = useState(null)
   const [saving, setSaving] = useState(false)

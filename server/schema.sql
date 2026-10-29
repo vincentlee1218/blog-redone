@@ -5,7 +5,8 @@ create table if not exists posts (
   author text not null,
   excerpt text,
   content text not null,
-  created_at timestamptz not null default now()
+  created_at timestamptz not null default now(),
+  user_id bigint references users(id) -- alter table posts
 );
 
 create table if not exists users (

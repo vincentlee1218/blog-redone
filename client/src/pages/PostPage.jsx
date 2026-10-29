@@ -2,10 +2,13 @@ import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { getPost, updatePost } from '../lib/api.js'
 import Byline from '../components/Byline.jsx'
+import { useAuth } from '../context/AuthContext.jsx'
 
 export default function PostPage() {
   const { id } = useParams()
+  const { user } = useAuth()
   const [post, setPost] = useState(null)
+  const [editable, setEditable] = useState(false)
   const [error, setError] = useState(null)
   const [editing, setEditing] = useState(false)
   const [form, setForm] = useState({ title: '', author: '', excerpt: '', content: '' })
@@ -16,11 +19,12 @@ export default function PostPage() {
   useEffect(() => {
     let active = true
     setPost(null)
+    setEditable(false)
     setError(null)
     setEditing(false)
     setSaveError(null)
     setSaved(false)
-    getPost(id).then((data) => { if (active) setPost(data) })
+    getPost(id).then((data) => { if (active) { setPost(data); if (user && user.id) setEditable(parseInt(user.id) === data.user_id); } })
       .catch((err) => { if (active) setError(err) })
     return () => { active = false }
   }, [id])
@@ -83,23 +87,25 @@ export default function PostPage() {
         </form>
       ) : (
         <>
-      <div className="article-actions">
-        <button type="button" className="edit-btn" onClick={startEditing} aria-label="Edit post" title="Edit post">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <path d="m16 3 5 5-12 12-6 1 1-6Z" />
-            <path d="m14 5 5 5" />
-          </svg>
-          Edit
-        </button>
-      </div>
-      {saved && <p className="save-status" role="status">Post updated.</p>}
-      <h1>{post.title}</h1>
-      <p className="article-subtitle">{post.excerpt}</p>
-      <Byline post={post} />
-      <div className="article-body">
-        <p>{post.content}</p>
-      </div>
-        </>
+        <div className="article-actions">
+          {user ? (
+            <button type="button" className="edit-btn" disabled={!editable} onClick={startEditing} aria-label="Edit post" title="Edit post">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="m16 3 5 5-12 12-6 1 1-6Z" />
+                <path d="m14 5 5 5" />
+              </svg>
+              Edit
+            </button>
+          ) : null}
+        </div>
+        {saved && <p className="save-status" role="status">Post updated.</p>}
+        <h1>{post.title}</h1>
+        <p className="article-subtitle">{post.excerpt}</p>
+        <Byline post={post} />
+        <div className="article-body">
+          <p>{post.content}</p>
+        </div>
+          </>
       )}
       <Link to="/" className="back-link">← All stories</Link>
     </article>

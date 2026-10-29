@@ -48,6 +48,7 @@ router.post('/', requireAuth, async (req, res) => {
       author: author.trim(),
       excerpt: excerpt?.trim() || content.trim().slice(0, 140),
       content: content.trim(),
+      user_id: req.user.id
     })
     .select()
     .single()
@@ -65,6 +66,19 @@ router.patch('/:id', requireAuth, async (req, res) => {
   if (![title, author, content].every((v) => typeof v === 'string' && v.trim())) {
     return res.status(400).json({ error: 'title, author and content are required' })
   }
+
+  const { data: userdata, error: lookupError } = await supabase
+    .from('posts')
+    .select('user_id')
+    .eq('id', req.params.id)
+    .maybeSingle()
+  
+  if (lookupError) return res.status(500).json({ error: lookupError.message })
+  if (!userdata) return res.status(404).json({ error: "Post not found" })
+  if (userdata.user_id > 0 && String(userdata.user_id) !== (req.user.id)) {
+    return res.status(403).json({ error: 'You can only edit your own posts' })
+  }
+
   
   const { data, error } = await supabase
     .from('posts')
@@ -72,14 +86,17 @@ router.patch('/:id', requireAuth, async (req, res) => {
       title: title.trim(),
       author: author.trim(),
       excerpt: excerpt?.trim() || content.trim().slice(0, 140),
-      content: content.trim(),
+      content: content.trim()
     })
     .eq('id', req.params.id)
+    .eq('user_id', req.user.id)
     .select()
     .maybeSingle()
 
   if (error) {
     console.log(error);
+    // Check if the error was because no update happened
+    if (error.code === "PGRST116") return res.status(404).json({error: "Post not found"})
     return res.status(500).json({ error: error.message })
   }
   if (!data) return res.status(404).json({ error: 'Post not found' })
