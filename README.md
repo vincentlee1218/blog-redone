@@ -16,7 +16,7 @@ cd client && cp .env.example .env && npm install && npm run dev
 Vite proxies `/api` to the server. Endpoints: `GET /api/posts`, `GET /api/posts/:id`, `GET /health`.
 
 ## Supabase
-1. Create a project, then run `server/schema.sql` in the SQL editor.
+1. Create a project, then run `server/schema/schema.sql` in the SQL editor.
 2. Put `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` in `server/.env`.
 3. Replace mock data in `server/src/routes/posts.js` using `server/src/lib/supabase.js`.
 
