@@ -16,3 +16,23 @@ create table if not exists users (
   password_hash text not null,
   created_at timestamptz not null default now()
 );
+
+create table if not exists votes (
+  id bigint generated always as identity primary key,
+  post_id bigint not null references posts(id) on delete cascade,
+  user_id bigint not null references users(id) on delete cascade,
+  value smallint not null check (value in (1, -1)),
+  created_at timestamptz not null default now(),
+  unique (post_id, user_id) -- one vote per user per post
+);
+
+create index if not exists votes_post_id_idx on votes (post_id);
+
+-- Totals per post, so you don't have to count in JS
+create or replace view post_vote_counts as
+select
+  post_id,
+  count(*) filter (where value = 1)  as upvotes,
+  count(*) filter (where value = -1) as downvotes
+from votes
+group by post_id;

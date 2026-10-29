@@ -1,23 +1,7 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { votePost } from '../lib/api.js'
-
-const myVoteKey = (id) => `vote:${id}`
-
-// Remembered per browser until votes are tied to signed-in users.
-function loadMyVote(id) {
-  try {
-    return Number(localStorage.getItem(myVoteKey(id))) || 0
-  } catch {
-    return 0
-  }
-}
-
-function saveMyVote(id, value) {
-  try {
-    if (value) localStorage.setItem(myVoteKey(id), String(value))
-    else localStorage.removeItem(myVoteKey(id))
-  } catch {}
-}
+import { useAuth } from '../context/AuthContext.jsx'
 
 const Arrow = ({ down }) => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -25,14 +9,18 @@ const Arrow = ({ down }) => (
   </svg>
 )
 
-// Expects post.upvotes / post.downvotes (missing counts are treated as 0).
+// Expects post.upvotes / post.downvotes and post.my_vote (1, -1 or 0 for the signed-in user).
+// Missing values are treated as 0. Signed-out users are sent to the login page.
 export default function VoteButtons({ post }) {
+  const { user } = useAuth()
+  const navigate = useNavigate()
   const [counts, setCounts] = useState({ up: post.upvotes ?? 0, down: post.downvotes ?? 0 })
-  const [myVote, setMyVote] = useState(() => loadMyVote(post.id)) // 1, -1 or 0
+  const [myVote, setMyVote] = useState(post.my_vote ?? 0) // 1, -1 or 0
   const [pending, setPending] = useState(false)
   const [error, setError] = useState(null)
 
   async function cast(value) {
+    if (!user) return navigate('/login')
     if (pending) return
     // Clicking your current vote again removes it.
     const next = myVote === value ? 0 : value
@@ -53,7 +41,6 @@ export default function VoteButtons({ post }) {
       if (Number.isFinite(result?.upvotes) && Number.isFinite(result?.downvotes)) {
         setCounts({ up: result.upvotes, down: result.downvotes })
       }
-      saveMyVote(post.id, next)
     } catch (err) {
       setCounts(prev.counts)
       setMyVote(prev.myVote)
@@ -66,11 +53,11 @@ export default function VoteButtons({ post }) {
   return (
     <div className="votes" role="group" aria-label="Vote on this post">
       <button type="button" className={`vote-btn${myVote === 1 ? ' vote-active-up' : ''}`}
-        onClick={() => cast(1)} disabled={pending} aria-pressed={myVote === 1} aria-label="Upvote" title="Upvote">
+        onClick={() => cast(1)} disabled={pending} aria-pressed={myVote === 1} aria-label="Upvote" title={user ? 'Upvote' : 'Sign in to vote'}>
         <Arrow /> <span>{counts.up}</span>
       </button>
       <button type="button" className={`vote-btn${myVote === -1 ? ' vote-active-down' : ''}`}
-        onClick={() => cast(-1)} disabled={pending} aria-pressed={myVote === -1} aria-label="Downvote" title="Downvote">
+        onClick={() => cast(-1)} disabled={pending} aria-pressed={myVote === -1} aria-label="Downvote" title={user ? 'Downvote' : 'Sign in to vote'}>
         <Arrow down /> <span>{counts.down}</span>
       </button>
       {error && <span className="vote-error" role="alert">{error}</span>}

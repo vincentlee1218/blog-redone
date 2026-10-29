@@ -104,11 +104,10 @@ router.patch('/:id', requireAuth, async (req, res) => {
 })
 
 // POST /api/posts/:id/vote { value: 1 | -1 | 0 }   (1 = upvote, -1 = downvote, 0 = remove vote)
+// Signed-in users only; req.user.id identifies the voter (one vote per user per post).
 // TODO: implement voting. The client expects the updated totals back as JSON:
 //   { upvotes: number, downvotes: number }
-// Currently open to anyone. When you restrict it to signed-in users, add requireAuth
-// (req.user.id is then available to dedupe votes per user).
-router.post('/:id/vote', async (req, res) => {
+router.post('/:id/vote', requireAuth, async (req, res) => {
   if (!supabase) return res.status(503).json({ error: 'Supabase is not configured' })
 
   res.status(501).json({ error: 'Voting is not implemented yet' })
