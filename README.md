@@ -21,6 +21,8 @@ Vite proxies `/api` to the server. Endpoints: `GET /api/posts`, `GET /api/posts/
 3. Replace mock data in `server/src/routes/posts.js` using `server/src/lib/supabase.js`.
 
 ## Deploy backend to a DigitalOcean droplet
+Full walkthrough with explanations: [deploy/DEPLOYMENT.md](deploy/DEPLOYMENT.md). Quick version:
+
 1. Install Node 20+, nginx, and PM2 (`npm i -g pm2`) on the droplet.
 2. Copy `server/` over (git clone or rsync), create `.env`, run `npm ci --omit=dev`.
 3. `pm2 start ecosystem.config.cjs && pm2 save && pm2 startup`.
