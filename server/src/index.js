@@ -3,6 +3,7 @@ import express from 'express'
 import cors from 'cors'
 import postsRouter from './routes/posts.js'
 import authRouter from './routes/auth.js'
+import commentsRouter from './routes/comments.js'
 import { checkDb } from './lib/supabase.js'
 
 const app = express()
@@ -21,6 +22,7 @@ app.get('/db', async (_req, res) => {
 
 app.use('/api/auth', authRouter)
 app.use('/api/posts', postsRouter)
+app.use('/api', commentsRouter)
 
 app.listen(PORT, async () => {
   console.log(`Server listening on port ${PORT}`)

@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import VoteButtons from './VoteButtons.jsx'
+import CommentButton from './CommentButton.jsx'
 import { formatDate, readTime } from '../lib/format.js'
 
 export default function PostCard({ post }) {
@@ -16,7 +17,10 @@ export default function PostCard({ post }) {
       <div className="post-card-meta">
         {formatDate(post.created_at)} · {readTime(post.content)}
       </div>
-      <VoteButtons post={post} />
+      <div className="post-card-actions">
+        <VoteButtons post={post} />
+        <CommentButton post={post} />
+      </div>
     </article>
   )
 }
