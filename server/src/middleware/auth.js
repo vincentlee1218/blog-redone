@@ -29,5 +29,16 @@ export function requireAuth(req, res, next) {
 //
 // Until implemented this is a no-op, so req.user is never set.
 export function optionalAuth(req, res, next) {
+  const header = req.headers.authorization ?? ''
+  const token = header.startsWith('Bearer ') ? header.slice(7) : null
+  if (token) {
+    try {
+      const { sub, email, name } = jwt.verify(token, process.env.JWT_SECRET)
+      req.user = { id: sub, email, name }
+    } catch {
+      // Invalid or expired token
+    }
+  }
+  // No 401 returned for optional auth check
   next()
 }

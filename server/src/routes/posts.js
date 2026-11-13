@@ -30,6 +30,46 @@ router.get('/', optionalAuth, async (_req, res) => {
     .from('posts')
     .select('*')
     .order('created_at', { ascending: false })
+  
+  const ids = await data.map((p) => p.id);
+  const { data: voteCounts, error: voteError } = await supabase
+    .from('post_vote_counts')
+    .select('*')
+    .in('post_id', ids); // only return rows of posts that loaded
+  
+  const votesByPost = {}
+  voteCounts.forEach((e) => votesByPost[e.post_id] = e)
+  data.forEach((post) => {
+    const votesForThisPost = votesByPost[post.id];
+    let upvotes = 0;
+    let downvotes = 0;
+    if (votesForThisPost) {
+      upvotes = votesForThisPost.upvotes;
+      downvotes = votesForThisPost.downvotes;
+    }
+    post.upvotes = upvotes;
+    post.downvotes = downvotes;
+  })
+  
+  if (_req.user) {
+    const { data: userVotes, error: userVoteError } = await supabase
+      .from('votes')
+      .select('post_id, value')
+      .eq('user_id', _req.user.id)
+      .in('post_id', ids); // only return rows of posts that loaded
+    
+    const myVotes = {}
+    userVotes.forEach((e) => myVotes[e.post_id] = e)
+    data.forEach((post) => {
+      const myVote = myVotes[post.id];
+      if (myVote) {
+        post.my_vote = myVote.value;
+      }
+      else {
+        post.my_vote = 0;
+      }
+    })
+  }
 
   if (error) return res.status(500).json({ error: error.message })
   res.json(data)
@@ -53,6 +93,29 @@ router.get('/:id', optionalAuth, async (req, res) => {
 
   if (error) return res.status(500).json({ error: error.message })
   if (!data) return res.status(404).json({ error: 'Post not found' })
+
+  const { data: voteCounts, error: voteError } = await supabase
+    .from('post_vote_counts')
+    .select('*')
+    .eq('post_id', req.params.id)
+    .maybeSingle();
+  
+  if (voteCounts) {
+    data.upvotes = voteCounts.upvotes
+    data.downvotes = voteCounts.downvotes
+  }
+  if (req.user) {
+    const { data: userVote, error: userVoteError } = await supabase
+      .from('votes')
+      .select('value')
+      .eq('post_id', req.params.id)
+      .eq('user_id', req.user.id)
+      .maybeSingle()
+    
+    if (userVote) {
+      data.my_vote = userVote.value
+    }
+  }
   res.json(data)
 })
 
@@ -163,8 +226,53 @@ router.patch('/:id', requireAuth, async (req, res) => {
 //     to validate it's numeric first.
 router.post('/:id/vote', requireAuth, async (req, res) => {
   if (!supabase) return res.status(503).json({ error: 'Supabase is not configured' })
+  
+  const { value } = req.body ?? {};
+  const validValues = [-1, 0, 1];
+  if (validValues.indexOf(value) === -1) {
+    return res.status(400).json({ error: 'Invalid value' })
+  }
 
-  res.status(501).json({ error: 'Voting is not implemented yet' })
+  const { data, error } = await supabase
+    .from('posts')
+    .select('*')
+    .eq('id', req.params.id)
+    .maybeSingle()
+  
+  if (error) return res.status(500).json({ error: error.message })
+  if (!data) return res.status(404).json({ error: 'Post not found' })
+  
+  if (value === 0) {
+    const { removeResult, removeError } = await supabase
+      .from('votes')
+      .delete()
+      .eq('post_id', req.params.id)
+      .eq('user_id', req.user.id)
+    if (removeError) return res.status(500).json({ error: error.message })
+  }
+  else {
+    const { voteResult, voteError } = await supabase
+      .from('votes')
+      .upsert({ post_id: req.params.id, user_id: req.user.id, value: value, response: (value > 0)},
+        { onConflict: "post_id, user_id"}
+      )
+    if (voteError) return res.status(500).json({ error: error.message });
+  }
+
+  const { data: voteCounts, error: voteError } = await supabase
+    .from('post_vote_counts')
+    .select('*')
+    .eq('post_id', req.params.id)
+    .maybeSingle();
+  let upvotes = 0;
+  let downvotes = 0;
+  if (voteCounts) {
+    upvotes = voteCounts.upvotes ?? 0;
+    downvotes = voteCounts.downvotes ?? 0;
+  }
+  
+  // res.status(501).json({ error: 'Voting is not implemented yet' })
+  res.status(200).json({ upvotes: upvotes, downvotes: downvotes });
 })
 
 export default router
