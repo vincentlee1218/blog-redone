@@ -1,9 +1,8 @@
 import { Link } from 'react-router-dom'
-import { commentCountFor } from '../lib/api.js'
 
 // Speech-bubble button with a count badge. Links to the comments under the post.
 export default function CommentButton({ post }) {
-  const count = commentCountFor(post)
+  const count = post.comment_count ?? 0
 
   return (
     <Link

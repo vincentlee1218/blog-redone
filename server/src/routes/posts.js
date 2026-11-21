@@ -4,20 +4,21 @@ import { requireAuth, optionalAuth } from '../middleware/auth.js'
 
 const router = Router()
 
-// TODO (comments): each post returned by GET /api/posts and GET /api/posts/:id also needs
-// `comment_count` (a number) so the home page can show the badge on the comment button.
-// Do this together with the vote info below, using the same pattern:
-//   1. Fetch the totals for the posts you are returning, from the post_comment_counts view
-//      (created in schema/schema_2.sql):
-//        supabase.from('post_comment_counts').select('*').in('post_id', ids)
-//      For the single-post route use .eq('post_id', id).maybeSingle() instead.
-//   2. Check its `error` and return 500 with error.message if set.
-//   3. Build a Map keyed by post_id -> comment_count, then add to each post:
-//        comment_count: Number(map.get(p.id) ?? 0)
-//      Posts with no comments have NO row in the view, so default to 0. Wrap in Number()
-//      because the view's count can come back as a string.
-// The comment routes themselves are in routes/comments.js.
-//
+// Adds comment_count to each post, from the post_comment_counts view (schema_2.sql).
+// Posts with no comments have no row in the view, so they default to 0.
+// Returns the Supabase error, or null on success.
+async function attachCommentCounts(posts) {
+  const { data, error } = await supabase
+    .from('post_comment_counts')
+    .select('*')
+    .in('post_id', posts.map((p) => p.id))
+  if (error) return error
+
+  const countByPost = new Map(data.map((c) => [c.post_id, Number(c.comment_count)]))
+  posts.forEach((post) => { post.comment_count = countByPost.get(post.id) ?? 0 })
+  return null
+}
+
 // GET /api/posts (newest first)
 //
 // TODO (votes): each post in the response also needs vote info for the frontend:
@@ -86,6 +87,9 @@ router.get('/', optionalAuth, async (_req, res) => {
   }
 
   if (error) return res.status(500).json({ error: error.message })
+
+  const commentError = await attachCommentCounts(data)
+  if (commentError) return res.status(500).json({ error: commentError.message })
   res.json(data)
 })
 
@@ -130,6 +134,9 @@ router.get('/:id', optionalAuth, async (req, res) => {
       data.my_vote = userVote.value
     }
   }
+
+  const commentError = await attachCommentCounts([data])
+  if (commentError) return res.status(500).json({ error: commentError.message })
   res.json(data)
 })
 
