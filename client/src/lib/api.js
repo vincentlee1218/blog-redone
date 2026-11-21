@@ -50,3 +50,11 @@ export const getComments = (postId) => request(`/api/posts/${postId}/comments`)
 export const addComment = (postId, content) =>
   request(`/api/posts/${postId}/comments`, json({ content }))
 export const deleteComment = (id) => request(`/api/comments/${id}`, { method: 'DELETE' })
+
+// Uploads one image file and returns { url } to send as `image_url` on a post.
+// Sent as multipart/form-data, so no Content-Type header: the browser adds it with the boundary.
+export const uploadImage = (file) => {
+  const body = new FormData()
+  body.append('image', file)
+  return request('/api/uploads', { method: 'POST', body })
+}

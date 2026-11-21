@@ -10,9 +10,12 @@ export default function PostCard({ post }) {
         <span className="avatar avatar-sm">{post.author[0]}</span>
         <span>{post.author}</span>
       </div>
-      <Link to={`/posts/${post.id}`} className="post-card-link">
-        <h2>{post.title}</h2>
-        <p className="post-card-excerpt">{post.excerpt}</p>
+      <Link to={`/posts/${post.id}`} className="post-card-link post-card-row">
+        <div className="post-card-text">
+          <h2>{post.title}</h2>
+          <p className="post-card-excerpt">{post.excerpt}</p>
+        </div>
+        {post.image_url && <img className="post-card-thumb" src={post.image_url} alt="" loading="lazy" />}
       </Link>
       <div className="post-card-meta">
         {formatDate(post.created_at)} · {readTime(post.content)}
