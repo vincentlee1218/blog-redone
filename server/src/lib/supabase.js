@@ -37,3 +37,15 @@ export async function checkDb() {
     latencyMs: Date.now() - started,
   }
 }
+
+// Storage bucket for post images (created by schema/schema_3.sql).
+export const IMAGE_BUCKET = 'post-images'
+
+// Public URL prefix of the bucket, so a post's image_url can be checked and mapped back
+// to a storage path. Null when Supabase isn't configured.
+export const imageUrlPrefix = () =>
+  supabase ? supabase.storage.from(IMAGE_BUCKET).getPublicUrl('').data.publicUrl : null
+
+// Only URLs of images in our own bucket are accepted on a post.
+export const isOwnImageUrl = (url) =>
+  typeof url === 'string' && !!imageUrlPrefix() && url.startsWith(imageUrlPrefix())

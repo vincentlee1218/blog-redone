@@ -1,8 +1,13 @@
 import { Router } from 'express'
-import { supabase } from '../lib/supabase.js'
+import { supabase, IMAGE_BUCKET, imageUrlPrefix, isOwnImageUrl } from '../lib/supabase.js'
 import { requireAuth, optionalAuth } from '../middleware/auth.js'
 
 const router = Router()
+
+// image_url on create/edit: undefined (not sent), null or '' (no image), or the URL
+// returned by POST /api/uploads. Returns an error message, or null if it's fine.
+const imageUrlProblem = (value) =>
+  value == null || value === '' || isOwnImageUrl(value) ? null : 'image_url must be an uploaded image'
 
 // Adds comment_count to each post, from the post_comment_counts view (schema_2.sql).
 // Posts with no comments have no row in the view, so they default to 0.
@@ -144,10 +149,12 @@ router.get('/:id', optionalAuth, async (req, res) => {
 router.post('/', requireAuth, async (req, res) => {
   if (!supabase) return res.status(503).json({ error: 'Supabase is not configured' })
 
-  const { title, author, content, excerpt } = req.body ?? {}
+  const { title, author, content, excerpt, image_url } = req.body ?? {}
   if (![title, author, content].every((v) => typeof v === 'string' && v.trim())) {
     return res.status(400).json({ error: 'title, author and content are required' })
   }
+  const imageProblem = imageUrlProblem(image_url)
+  if (imageProblem) return res.status(400).json({ error: imageProblem })
 
   const { data, error } = await supabase
     .from('posts')
@@ -156,6 +163,7 @@ router.post('/', requireAuth, async (req, res) => {
       author: author.trim(),
       excerpt: excerpt?.trim() || content.trim().slice(0, 140),
       content: content.trim(),
+      image_url: image_url || null,
       user_id: req.user.id
     })
     .select()
@@ -170,14 +178,16 @@ router.post('/', requireAuth, async (req, res) => {
 router.patch('/:id', requireAuth, async (req, res) => {
   if (!supabase) return res.status(503).json({ error: 'Supabase is not configured' })
   
-  const { title, author, content, excerpt } = req.body ?? {}
+  const { title, author, content, excerpt, image_url } = req.body ?? {}
   if (![title, author, content].every((v) => typeof v === 'string' && v.trim())) {
     return res.status(400).json({ error: 'title, author and content are required' })
   }
+  const imageProblem = imageUrlProblem(image_url)
+  if (imageProblem) return res.status(400).json({ error: imageProblem })
 
   const { data: userdata, error: lookupError } = await supabase
     .from('posts')
-    .select('user_id')
+    .select('user_id, image_url')
     .eq('id', req.params.id)
     .maybeSingle()
   
@@ -194,7 +204,9 @@ router.patch('/:id', requireAuth, async (req, res) => {
       title: title.trim(),
       author: author.trim(),
       excerpt: excerpt?.trim() || content.trim().slice(0, 140),
-      content: content.trim()
+      content: content.trim(),
+      // Left unchanged when the client doesn't send image_url; null or '' removes it.
+      ...(image_url !== undefined && { image_url: image_url || null }),
     })
     .eq('id', req.params.id)
     .eq('user_id', req.user.id)
@@ -208,6 +220,13 @@ router.patch('/:id', requireAuth, async (req, res) => {
     return res.status(500).json({ error: error.message })
   }
   if (!data) return res.status(404).json({ error: 'Post not found' })
+
+  // The old image was replaced or removed: delete its file so storage doesn't pile up.
+  // Best effort, a failure here shouldn't fail the edit.
+  const oldUrl = userdata.image_url
+  if (oldUrl && oldUrl !== data.image_url && isOwnImageUrl(oldUrl)) {
+    await supabase.storage.from(IMAGE_BUCKET).remove([oldUrl.slice(imageUrlPrefix().length)])
+  }
   res.json(data)
 })
 

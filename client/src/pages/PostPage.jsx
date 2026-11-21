@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { getPost, updatePost } from '../lib/api.js'
+import { getPost, updatePost, uploadImage } from '../lib/api.js'
+import ImagePicker from '../components/ImagePicker.jsx'
 import Byline from '../components/Byline.jsx'
 import VoteButtons from '../components/VoteButtons.jsx'
 import Comments from '../components/Comments.jsx'
@@ -14,6 +15,7 @@ export default function PostPage() {
   const [error, setError] = useState(null)
   const [editing, setEditing] = useState(false)
   const [form, setForm] = useState({ title: '', author: '', excerpt: '', content: '' })
+  const [image, setImage] = useState({ file: null, url: null })
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState(null)
   const [saved, setSaved] = useState(false)
@@ -33,6 +35,7 @@ export default function PostPage() {
 
   function startEditing() {
     setForm({ title: post.title, author: post.author, excerpt: post.excerpt || '', content: post.content })
+    setImage({ file: null, url: post.image_url ?? null })
     setSaveError(null)
     setSaved(false)
     setEditing(true)
@@ -43,7 +46,10 @@ export default function PostPage() {
     setSaving(true)
     setSaveError(null)
     try {
+      // A newly picked file is uploaded first. Otherwise keep the current URL (null = removed).
+      const image_url = image.file ? (await uploadImage(image.file)).url : image.url
       const updated = await updatePost(id, {
+        image_url,
         title: form.title.trim(), author: form.author.trim(),
         excerpt: form.excerpt.trim(), content: form.content.trim(),
       })
@@ -80,6 +86,8 @@ export default function PostPage() {
             <input id="edit-excerpt" name="excerpt" value={form.excerpt} onChange={update} />
             <label htmlFor="edit-content">Content</label>
             <textarea id="edit-content" name="content" value={form.content} onChange={update} rows={14} required />
+            <label>Cover image</label>
+            <ImagePicker image={image} onChange={setImage} disabled={saving} />
           </fieldset>
           {saveError && <p className="form-error" role="alert">{saveError}</p>}
           <div className="edit-actions">
@@ -104,6 +112,7 @@ export default function PostPage() {
         <h1>{post.title}</h1>
         <p className="article-subtitle">{post.excerpt}</p>
         <Byline post={post} />
+        {post.image_url && <img className="article-image" src={post.image_url} alt="" />}
         <div className="article-body">
           <p>{post.content}</p>
         </div>
